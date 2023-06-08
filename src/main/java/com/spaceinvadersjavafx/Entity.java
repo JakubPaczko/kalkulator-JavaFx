@@ -1,41 +1,35 @@
 package com.spaceinvadersjavafx;
+import javafx.scene.image.Image;
+
 import java.util.List;
 
-enum entType {bullet, player, meteor}
+enum entType {bullet, player, meteor, explosion, medkit}
 
 public class Entity {
-    private int level = 1;
-    final  float maxVelocity = 10;
-    final float drag = 0.99f;
+
+    protected boolean hasCollider = true;
+    protected Image image = null;
     public final float defaultEntSize = 32f;
-    float rotation = 0;
-    float rotationSpeed = 0.05f;//(float) Math.toRadians(45.0);
-    private entType type;
+    protected float rotation = 0;
+    float rotationSpeed = (float) Math.toRadians(5.0);
+    protected entType type;
     public float posX;
     public float posY;
-    public float velX;
-    public float velY;
     public float sizeX;
     public float sizeY;
-    public int damage;
-    float acceleration;
     boolean isAlive = true;
     private int HP;
     private final int shootFramesTimer = 50;
-    Entity(int _hp, float _posX, float _posY, float _velX, float _velY, float scale, int _damage, float _acceleration, entType _type)
+    Entity(int _hp, float _posX, float _posY, float scale)
     {
-        acceleration = _acceleration;
 
-        type = _type;
+        type = null;
 
         HP = _hp;
-        damage = _damage;
 
         posX = _posX;
         posY = _posY;
 
-        velX = _velX;
-        velY = _velY;
 
         sizeX = defaultEntSize * scale;
         sizeY = defaultEntSize * scale;
@@ -43,75 +37,7 @@ public class Entity {
         rotation = 0f;
     }
 
-//    Entity(int _hp, float _posX, float _posY, float _velX, float scale, int _damage)
-//    {
-//        type = entType.meteor;
-//
-//        HP = _hp;
-//        damage = _damage;
-//
-//        posX = _posX;
-//        posY = _posY;
-//
-//        velX = _velX;
-//
-//        sizeX = defaultEntSize * scale;
-//        sizeY = defaultEntSize * scale;
-//
-//        rotation = 45f;
-//    }
-    int timer = 0;
-    void Update()
-    {
-        timer ++;
-
-        posX += velX;
-        posY += velY;
-
-        if(type == entType.player)
-        {
-            velX *= drag;
-            velY *= drag;
-        }
-
-        if(type == entType.meteor)
-        {
-            rotation += 0.1f;
-        }
-
-        HandleGameBoundaries();
-    }
-
-    public void AddFrontVelocity()
-    {
-        if(velX > maxVelocity || velY > maxVelocity) return;
-
-        velX -= Math.sin(Math.toRadians(rotation)) * acceleration;
-        velY -= Math.cos(Math.toRadians(rotation)) * acceleration;
-
-    }
-
-    public void AddVelocity(float _velX, float _velY)
-    {
-        velX += _velX;
-        velY += _velY;
-    }
-    public void SetVelocity(float _velX, float _velY)
-    {
-        velX = _velX;
-        velY = _velY;
-    }
-    public float GetVelocity(int dimension)
-    {
-        if(dimension == 1)
-        {
-            return  velX;
-        }
-        else if (dimension == 2) {
-            return  velY;
-        }
-        return 0f;
-    }
+     void Update() {}
 
     public void TakeDamage(int damage)
     {
@@ -123,20 +49,13 @@ public class Entity {
     boolean CheckCollider(Entity ent)
     {
         if(ent == this) return false;
-
+        if(!hasCollider || !ent.hasCollider) return  false;
 
         if(posX < ent.posX + ent.sizeX &&
                 posX + sizeX > ent.posX &&
                 posY < ent.posY + ent.sizeY &&
-                posY + ent.sizeY > ent.posY) {
-            if(ent.GetType() == entType.meteor && type == entType.bullet){
-                ent.TakeDamage(damage);
-                isAlive = false;
-            }
-            else if(ent.GetType() == entType.meteor && type == entType.player)
-            {
-                TakeDamage(ent.damage);
-            }
+                posY + sizeY > ent.posY) {
+
             return true;
         }
         return  false;
@@ -147,41 +66,22 @@ public class Entity {
         for (Entity ent : game.Container) {
             if(ent == this) continue;
 
-
-            if(posX < ent.posX + ent.sizeX &&
-                    posX + sizeX > ent.posX &&
-                    posY < ent.posY + ent.sizeY &&
-                    posY + ent.sizeY > ent.posY) {
-                if(ent.GetType() == entType.meteor && type == entType.bullet){
-                    game.AddScore(1);
-                    ent.TakeDamage(damage);
-                    isAlive = false;
-                }
-                else if(ent.GetType() == entType.meteor && type == entType.player)
-                {
-                    TakeDamage(ent.damage);
-                    ent.TakeDamage(damage);
-                }
+            if(CheckCollider(ent)) {
+                OnCollision(ent);
             }
         }
+    }
+
+    void OnCollision(Entity ent)
+    {
+
     }
 
     void rotate(float value)
     {
             rotation += value;
     }
-    public void Shoot(List<Entity> con)
-    {
-//        System.out.println(timer);
-        if(timer < shootFramesTimer) return;
-        float bulletVelX = (float) -Math.sin(Math.toRadians(rotation)) * 20;
-        float bulletVelY = (float) -Math.cos(Math.toRadians(rotation)) * 20;
-        timer = 0;
 
-        Entity bullet = new Entity(1, posX, posY, bulletVelX, bulletVelY, 1, damage, 0, entType.bullet);
-        bullet.rotation = rotation;
-        con.add(bullet);
-    }
 
     public entType GetType()
     {
@@ -207,8 +107,14 @@ public class Entity {
         }
     }
 
+    public Image getImage()
+    {
+        return  image;
+    }
     public int GetHP()
     {
         return HP;
     }
+
+
 }

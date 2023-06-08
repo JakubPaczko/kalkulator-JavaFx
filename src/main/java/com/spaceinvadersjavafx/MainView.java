@@ -21,21 +21,12 @@ public class MainView extends AnchorPane{
         this.getChildren().addAll(canvas, restartButton, pauseButton);
 
         restartButton.setOnAction(actionEvent -> {gameLogic.onRestartButtonClick();});
-        pauseButton.setOnAction(actionEvent -> {gameLogic.onPauseButtonClick();});
-
-//        pauseButton.setL
-
         restartButton.setLayoutY(height - 30);
         restartButton.setLayoutX(width/2 - 50);
+
+        pauseButton.setOnAction(actionEvent -> {gameLogic.onPauseButtonClick();});
         pauseButton.setLayoutY(height - 30);
         pauseButton.setLayoutX(width/2 + 20);
-
-        //        pauseButton.snapPositionY(height);
-
-//        pauseButton.
-
-//        pauseButton.snapPositionX((float)width/2);
-
     }
 
     public void SetGameLogic(GameLogic _gameLogic)

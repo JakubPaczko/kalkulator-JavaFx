@@ -25,6 +25,7 @@ public class SpaceInvadersApplication extends Application {
         Timeline t1 = new Timeline(new KeyFrame(Duration.millis(20), e -> game.Update(mainView.GetGraphicsContext())));
         t1.setCycleCount(Timeline.INDEFINITE);
         t1.play();
+
         stage.show();
     }
 

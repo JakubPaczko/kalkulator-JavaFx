@@ -22,6 +22,8 @@ public class GameLogic {
 
     gameState state;
     int baseMeteorSpawnTime = 150;
+    int baseMedkitSpawnTime = 600;
+
     GameLogic(Scene scene)
     {
         _scene = scene;
@@ -52,16 +54,20 @@ public class GameLogic {
                 {
                     Container.remove(i);
                 }
+
             }
             SpawnMeteor();
+            SpawnMedkit();
         }
 
         Display(gc);
         DisplayUI(gc);
     }
 
-    public void HandleInput(Entity _ent)
+    public void HandleInput(int entId)
     {
+        Player _ent = GetPlayer(entId);
+
         _scene.addEventHandler(KeyEvent.ANY, (key) -> {
             if (key.getCode() == KeyCode.W) {
                 _ent.AddFrontVelocity();
@@ -70,10 +76,10 @@ public class GameLogic {
                 _ent.Shoot(Container);
             }
             if(key.getCode()== KeyCode.A) {
-                _ent.rotate(5f);
+                _ent.rotate(15f);
             }
             if (key.getCode() == KeyCode.D) {
-                _ent.rotate(-5f);
+                _ent.rotate(-15f);
             }
         });
     }
@@ -102,8 +108,8 @@ public class GameLogic {
             float s = (float) Math.sin(Math.toRadians(ent.rotation));
             float c = (float) Math.cos(Math.toRadians(ent.rotation));
 
-            float px = ent.posX - (ent.sizeX/2);
-            float py = ent.posY - (ent.sizeY/2);
+            float px = ent.posX + (ent.sizeX/2);
+            float py = ent.posY + (ent.sizeY/2);
 
             float xnew = px * c - py * s;
             float ynew = px * s + py * c;
@@ -111,9 +117,21 @@ public class GameLogic {
             px = xnew;
             py = ynew;
 
+
+
+            if(DebugMode)
+            {
+                gc.setFill(Color.WHITE);
+                gc.fillRect(ent.posX, ent.posY, ent.sizeX, ent.sizeY);
+                gc.setFill(Color.BLACK);
+                gc.fillRect(ent.posX+1, ent.posY+1, ent.sizeX-2, ent.sizeY-2);
+
+            }
+
             gc.rotate(-ent.rotation);
-            gc.drawImage(drawImager, px - (ent.sizeX/2), py - (ent.sizeY/2), ent.sizeX, ent.sizeY);
+            gc.drawImage(ent.getImage(), px - (ent.sizeX/2), py - (ent.sizeY/2), ent.sizeX, ent.sizeY);
             gc.rotate(ent.rotation);
+
         }
     }
     boolean DebugMode = true;
@@ -167,23 +185,23 @@ public class GameLogic {
 
         if(i == 0)
         {
-            xPos = screenHeight;
-            yPos = (int) (Math.random() * 1000) % screenWidth;
+            yPos = screenHeight;
+            xPos = (int) (Math.random() * 1000) % screenWidth;
         }
         else if(i == 1)
         {
-            xPos = 0;
-            yPos = (int) (Math.random() * 1000) % screenWidth;
+            yPos = 0;
+            xPos = (int) (Math.random() * 1000) % screenWidth;
         }
         else if(i == 2)
         {
-            yPos = screenHeight;
-            xPos = (int) (Math.random() * 1000) % screenHeight;
+            xPos = screenHeight;
+            yPos = (int) (Math.random() * 1000) % screenHeight;
         }
         else
         {
-            yPos = 0;
-            xPos = (int) (Math.random() * 1000) % screenHeight;
+            xPos = 0;
+            yPos = (int) (Math.random() * 1000) % screenHeight;
         }
 
         float targetPosX = (float) screenWidth/2;
@@ -196,12 +214,63 @@ public class GameLogic {
         int damage = (int) (1 + (0.1 * (Score + 1)));
         int hp = (int) (5 + (1 * (Score + 1)));
 
-        System.out.println(xVel);
-        System.out.println(yVel);
+//        System.out.println(xVel);
+//        System.out.println(yVel);
 
 
-        Entity meteor = new Entity(hp, xPos, yPos, xVel, yVel,scale , damage, 0, entType.meteor);
+//        Entity meteor = new Entity(hp, xPos, yPos, xVel, yVel,scale , damage, 0, entType.meteor);
+        Meteor meteor = new Meteor(hp, xPos, yPos, xVel, yVel,scale , damage, 0);
         Container.add(meteor);
+    }
+    int medkitDelayTimer = 0;
+
+    private void SpawnMedkit()
+    {
+        medkitDelayTimer++;
+
+        if(medkitDelayTimer < baseMedkitSpawnTime) return;
+
+        medkitDelayTimer = 0;
+
+        float xPos = 0;
+        float yPos = 0;
+
+        int i = (int) (Math.random() * 10) % 4;
+
+        if(i == 0)
+        {
+            yPos = screenHeight;
+            xPos = (int) (Math.random() * 1000) % screenWidth;
+        }
+        else if(i == 1)
+        {
+            yPos = 0;
+            xPos = (int) (Math.random() * 1000) % screenWidth;
+        }
+        else if(i == 2)
+        {
+            xPos = screenHeight;
+            yPos = (int) (Math.random() * 1000) % screenHeight;
+        }
+        else
+        {
+            xPos = 0;
+            yPos = (int) (Math.random() * 1000) % screenHeight;
+        }
+
+        float targetPosX = (float) screenWidth/2;
+        float targetPosY = (float) screenHeight/2;
+
+        float xVel = -(xPos - targetPosX) / 300;
+        float yVel = -(yPos - targetPosY) / 300;
+
+        float scale = 1;
+        int damage = (int) (1 + (0.1 * (Score + 1)));
+        int hp = (int) (2 + (int)(Score/10));
+
+
+        Medkit medkit = new Medkit(hp * 2, xPos, yPos, xVel, yVel,scale , damage);
+        Container.add(medkit);
     }
 
 //    @FXML
@@ -229,17 +298,31 @@ public class GameLogic {
     }
 
     private void SpawnPlayer(){
-        Entity player = new Entity(10,
-                (float) screenWidth/2,
-                (float) screenHeight/2,
-                0,
-                0,
-                1,
-                15,
-                0.5f,
-                entType.player);
-
-        HandleInput(player);
+        Player player = new Player(10, 100, 100, 0, 0, 1, 10, 0.5f);
         Container.add(player);
+
+        HandleInput(0);
     }
+
+    Meteor GetMeteor(int id){
+        return (Meteor) Container.get(id);
+    }
+
+    Player GetPlayer(int id){
+        return (Player) Container.get(id);
+    }
+
+    Bullet GetBullet(int id){
+        return (Bullet) Container.get(id);
+    }
+    Meteor GetMedtkit(int id){
+        return (Meteor) Container.get(id);
+    }
+
+    public void SpawnExplosion(float posX, float posY, float scale){
+        Expolsion ex = new Expolsion(1, posX, posY, scale);
+
+        Container.add(ex);
+    }
+
 }
